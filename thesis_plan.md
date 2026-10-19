@@ -1,181 +1,181 @@
-# Master's Thesis Plan: Polish Attitudes toward Ukraine in YouTube Comments (2022–2026)
+# Plan pracy magisterskiej: Postawy Polaków wobec Ukrainy w komentarzach na YouTube (2022–2026)
 
-## 1. Working title
+## 1. Tytuł roboczy
 
-*Target-based sentiment and emotion analysis of Polish YouTube comments on Ukraine-related news, 2022–2026*
+*Analiza sentymentu i emocji względem celów w polskich komentarzach na YouTube do wiadomości o Ukrainie, 2022–2026*
 
-## 2. Research questions
+## 2. Pytania badawcze
 
-- **RQ1:** How did comment sentiment toward each target (see §3) change between 2022 and 2026?
-- **RQ2:** Do changes match key events (see §7) and the trends in opinion polls (CBOS and others)?
-- **RQ3:** Do left- and right-leaning channels differ in the level and timing of these changes?
-- **RQ4 (optional):** Did negativity move from governments to Ukrainians as people? Which topics drive it (benefits, history, agriculture, ...)?
-- **RQ5 (methodological):** How does a fine-tuned HerBERT model compare with LLM zero-shot/few-shot labelling for target-based stance in Polish?
+- **PB1:** Jak zmieniał się sentyment komentarzy wobec każdego celu (zob. §3) między 2022 a 2026 rokiem?
+- **PB2:** Czy zmiany odpowiadają kluczowym wydarzeniom (zob. §7) oraz trendom w sondażach opinii (CBOS i inne)?
+- **PB3:** Czy kanały lewicowe i prawicowe różnią się poziomem i momentem tych zmian?
+- **PB4 (opcjonalne):** Czy negatywność przesunęła się z rządów na Ukraińców jako ludzi? Jakie tematy ją napędzają (świadczenia, historia, rolnictwo, ...)?
+- **PB5 (metodologiczne):** Jak porównuje się dostrojony model HerBERT z etykietowaniem zero-shot/few-shot przez LLM dla stanowiska względem celów w języku polskim?
 
-## 3. Targets (aspects)
+## 3. Cele (aspekty)
 
-Each comment can mention several targets (multi-label). Each target in a comment gets its own stance.
+Każdy komentarz może dotyczyć kilku celów (multi-label). Każdy cel w komentarzu otrzymuje własne stanowisko.
 
-| # | Target | Covers |
-|---|--------|--------|
-| T1 | Polish government | Government, ministers, president, ruling parties |
-| T2 | Ukrainian government | Zelensky, ministers, specific Ukrainian politicians and their decisions or statements |
-| T3 | Ukrainians (people) | Ukrainians as a nation, refugees, migrants in Poland, Ukrainians in Ukraine |
-| T4 | Ukraine (state) | Ukraine as a country, its army, the war effort, military aid, EU/NATO accession |
-| T5 | Russia | Russia as a state, Putin, the Russian army (control / reference target) |
+| # | Cel | Obejmuje |
+|---|-----|----------|
+| T1 | polski rząd | Rząd, ministrowie, prezydent, partie rządzące |
+| T2 | ukraiński rząd | Zełenski, ministrowie, konkretni ukraińscy politycy oraz ich decyzje lub wypowiedzi |
+| T3 | Ukraińcy (ludzie) | Ukraińcy jako naród, uchodźcy, migranci w Polsce, Ukraińcy w Ukrainie |
+| T4 | Ukraina (państwo) | Ukraina jako kraj, jej armia, wysiłek wojenny, pomoc militarna, akcesja do UE/NATO |
+| T5 | Rosja | Rosja jako państwo, Putin, armia rosyjska (cel kontrolny / referencyjny)
 
-**Boundary rules (to refine after the pilot):**
+**Zasady graniczne (do dopracowania po pilotażu):**
 
-- T2 vs T4: specific people or decisions → T2. The country, army, aid or accession → T4. If agreement stays low after the pilot, merge them.
-- T1 changes meaning over time: PiS government until Dec 2023, Tusk coalition after that. The president changed from Duda to Nawrocki in Aug 2025. Store the period with each label and interpret results per period and per channel.
-- A plain "Ukraińcy" counts as T3.
+- T2 vs T4: konkretne osoby lub decyzje → T2. Państwo, armia, pomoc lub akcesja → T4. Jeśli zgodność po pilotażu będzie niska, połączyć je.
+- T1 zmienia znaczenie w czasie: rząd PiS do grudnia 2023, koalicja Tuska po tym terminie. Prezydent zmienił się z Dudy na Nawrockiego w sierpniu 2025. Zapisywać okres przy każdej etykiecie i interpretować wyniki według okresu i kanału.
+- Zwykłe „Ukraińcy” liczy się jako T3.
 
-**Labels for each target mention:**
+**Etykiety dla każdej wzmianki o celu:**
 
-- Stance: `positive` / `negative` / `neutral`
-- Emotion (optional, Plutchik basic set): anger, fear, sadness, joy, trust, disgust, surprise, anticipation
-- Topic tag (optional, mainly for T3): benefits/800+, labour market, history/Volhynia, agriculture/grain, war/security, crime, other
+- Nastawienie: `positive` / `negative` / `neutral`
+- Emocja (opcjonalnie, podstawowy zestaw Plutchika): gniew, strach, smutek, radość, zaufanie, wstręt, zaskoczenie, oczekiwanie
+- Etykieta tematyczna (opcjonalnie, głównie dla T3): korzyści/800+, rynek pracy, historia/Wołyń, rolnictwo/zboże, wojna/bezpieczeństwo, przestępczość, inne
 
-## 4. Data collection
+## 4. Zbieranie danych
 
-**Channels:** TVN24, TVP Info, Republika, wPolsce24, plus possibly Polsat News and RMF/Onet for balance. Check that each channel existed across the whole period; wPolsce24 in its current form did not.
+**Kanały:** TVN24, TVP Info, Republika, wPolsce24, a także ewentualnie Polsat News i RMF/Onet dla zachowania równowagi. Sprawdzić, czy każdy kanał istniał w całym okresie; wPolsce24 w obecnej formie nie istniał.
 
-**Collection rules:**
+**Zasady kolekcji:**
 
-- Choose videos with a clear, repeatable rule, e.g. every video whose title or description matches a keyword list (`Ukraina`, `Ukraińcy`, `uchodźcy`, `Zełenski`, `Wołyń`, `zboże`, `800+`, `Rosja`, `Putin`, ...) in each month.
-- Do not choose only the most-viewed videos, or at least report that choice as a source of bias.
-- Use the official **YouTube Data API v3** (`commentThreads.list`, `comments.list`) to get exact `publishedAt` timestamps.
-  - ⚠️ `youtube-comment-downloader` returns relative times ("2 lata temu"), so `time_parsed` is only accurate to roughly a year for old comments. That isn't precise enough for time-series analysis.
-- Store: comment id, video id, channel, video publish date, comment publish date, text, like count, reply flag, parent id, pseudonymised author id.
-- Record the collection date. Deleted or moderated comments are missing, so report this as a limitation.
+- Wybieraj filmy według jasnej, powtarzalnej reguły, np. wszystkie filmy, których tytuł lub opis pasuje do listy słów kluczowych („Ukraina”, „Ukraińcy”, „uchodźcy”, „Zełenski”, „Wołyń”, „zboże”, „800+”, „Rosja”, „Putin”, ...) w każdym miesiącu.
+- Nie wybieraj wyłącznie filmów z największą liczbą wyświetleń, albo przynajmniej zgłoś taki wybór jako źródło stronniczości.
+- Użyj oficjalnego **YouTube Data API v3** (`commentThreads.list`, `comments.list`), aby uzyskać dokładne znaczniki czasu `publishedAt`.
+- ⚠️ `youtube-comment-downloader` zwraca czasy względne („2 lata temu”), więc `time_parsed` jest dokładny tylko mniej więcej do roku dla starych komentarzy. To nie jest wystarczająco precyzyjne do analizy szeregów czasowych.
+- Zapisuj: identyfikator komentarza, identyfikator filmu, kanał, datę publikacji filmu, datę publikacji komentarza, tekst, liczbę polubień, flagę odpowiedzi, identyfikator nadrzędny, pseudonimizowany identyfikator autora.
+- Zarejestruj datę kolekcji. Usunięte lub moderowane komentarze są nieobecne, więc zgłoś to jako ograniczenie.
 
-**Quota estimate:** `commentThreads.list` costs 1 unit per call and returns up to 100 comments. The default 10,000 units/day is enough for hundreds of thousands of comments over a few days.
+**Szacunek limitu:** `commentThreads.list` kosztuje 1 jednostkę na wywołanie i zwraca do 100 komentarzy. Domyślne 10 000 jednostek/dzień wystarcza na setki tysięcy komentarzy w ciągu kilku dni.
 
-## 5. Pre-processing
+## 5. Przetwarzanie wstępne
 
-1. Remove duplicates and spam (identical texts, link-only comments).
-2. Detect language; keep Polish and decide how to handle Ukrainian and Russian comments.
-3. Normalise text (URLs, mentions, repeated characters). Keep emojis, because they carry sentiment.
-4. Filter by topic so only Ukraine/Russia-related comments remain (keywords + BERTopic or a classifier).
-5. Pseudonymise authors (hashed IDs) for GDPR.
+1. Usuń duplikaty i spam (identyczne teksty, komentarze zawierające tylko link).
+2. Wykryj język; zachowaj komentarze po polsku i zdecyduj, jak obsłużyć komentarze po ukraińsku i rosyjsku.
+3. Znormalizuj tekst (URL-e, wzmianki, powtarzające się znaki). Zachowaj emoji, ponieważ niosą ładunek emocjonalny.
+4. Przefiltruj według tematu, tak aby pozostały tylko komentarze związane z Ukrainą/Rosją (słowa kluczowe + BERTopic lub klasyfikator).
+5. Pseudonimizuj autorów (zahaszowane identyfikatory) na potrzeby RODO.
 
-## 6. Annotation and modelling
+## 6. Oznaczanie i modelowanie
 
-### 6.1 Annotation
+### 6.1 Oznaczanie
 
-- **Pilot:** about 500 comments to check target frequencies, class balance and the boundary rules.
-- **Gold set:** about 3,000–5,000 comments, stratified by channel, year and target.
-- **Second annotator** on about 300–500 comments; report Cohen's kappa for each target and stance.
-- Write annotation guidelines with examples; include them as an appendix.
-- Possible tools: Label Studio, Doccano.
+- **Pilotaż:** około 500 komentarzy, aby sprawdzić częstości celów, równowagę klas i reguły brzegowe.
+- **Zbiór złoty:** około 3 000–5 000 komentarzy, z warstwowaniem po kanale, roku i celu.
+- **Drugi anotator** na około 300–500 komentarzach; raportuj kappę Cohena dla każdego celu i postawy.
+- Napisz wytyczne do anotacji z przykładami; dołącz je jako aneks.
+- Możliwe narzędzia: Label Studio, Doccano.
 
-### 6.2 Models
+### 6.2 Modele
 
-1. **Baselines:** `Voicelab/herbert-base-cased-sentiment` (overall sentiment, no target), lexicon-based.
-2. **Main model:** fine-tune HerBERT (`allegro/herbert-base-cased` or large):
-   - target detection (multi-label), then stance for each target, or
-   - a single multi-task model with one classification head per target.
-3. **LLM approach:** zero-shot / few-shot labelling (Bielik, GPT-class models), evaluated on the gold set.
-4. **Optional distillation:** use LLM labels to train a smaller HerBERT model, then compare.
-5. **Emotions:** fine-tune on PolEmo 2.0 and/or your own labels.
+1. **Bazowe:** `Voicelab/herbert-base-cased-sentiment` (ogólny sentyment, brak celu), oparte na słowniku.
+2. **Model główny:** dostrojenie HerBERT-a (`allegro/herbert-base-cased` lub large):
+- detekcja celu (wieloe­tykietowa), potem stanowisko dla każdego celu, lub
+- pojedynczy model wielozadaniowy z jedną głowicą klasyfikacyjną na cel.
+3. **Podejście LLM:** etykietowanie zero-shot / few-shot (Bielik, modele z rodziny GPT), ewaluowane na zbiorze złotym.
+4. **Opcjonalna destylacja:** użycie etykiet LLM do trenowania mniejszego modelu HerBERT, następnie porównanie.
+5. **Emocje:** dostrojenie na PolEmo 2.0 i/lub własnych etykietach.
 
-**Metrics:** macro-F1 for each target and stance, confusion matrices, error analysis focused on sarcasm and irony.
+**Metryki:** makro-F1 dla każdego celu i stanowiska, macierze pomyłek, analiza błędów skupiona na sarkazmie i ironii.
 
-## 7. Analysis
+## 7. Analiza
 
-- **Time series:** share of negative/positive stance per target, per channel, per week or month. Normalise by comment volume.
-- **Change point detection:** e.g. `ruptures` (PELT, binary segmentation).
-- **Event alignment.** Candidate events:
-  - Feb 2022: full-scale invasion, refugee wave
-  - 2023: grain import dispute; Zelensky's UN speech (Sept 2023)
-  - Nov 2023 – early 2024: truckers' border blockade, farmers' protests
-  - Dec 2023: change of government in Poland; TVP takeover
-  - 2025: Volhynia exhumations debate, presidential campaign, debate over 800+ benefits for Ukrainians, Nawrocki's veto (Aug 2025)
-  - Add further events through 2026
-- **Validation against polls:** correlate monthly sentiment toward T3 and T4 with CBOS attitudes toward Ukrainians and support for helping Ukraine. Test lead/lag (cross-correlation, Granger causality).
-- **Channel comparison:** TVN24 vs Republika/wPolsce24. TVP before and after Dec 2023 as a natural experiment.
-- **Topic drivers:** BERTopic or topic tags within T3 negativity.
-- **Optional:** cross-target patterns, e.g. anti-Ukrainian and pro-Russian in the same comment, as a signal of possible troll or disinformation accounts.
+- **Szereg czasowy:** udział negatywnych/pozytywnych stanowisk na cel, na kanał, tygodniowo lub miesięcznie. Znormalizować względem wolumenu komentarzy.
+- **Detekcja punktów zmiany:** np. `ruptures` (PELT, segmentacja binarna).
+- **Dopasowanie do wydarzeń.** Kandydackie wydarzenia:
+- luty 2022: pełnoskalowa inwazja, fala uchodźców
+- 2023: spór o import zboża; przemówienie Zełenskiego w ONZ (wrzesień 2023)
+- listopad 2023 – wczesny 2024: blokada granicy przez kierowców ciężarówek, protesty rolników
+- grudzień 2023: zmiana rządu w Polsce; przejęcie TVP
+- 2025: debata o ekshumacjach na Wołyniu, kampania prezydencka, debata o świadczeniach 800+ dla Ukraińców, weto Nawrockiego (sierpień 2025)
+- Dodać kolejne wydarzenia do 2026
+- **Walidacja względem sondaży:** korelować miesięczny sentyment wobec T3 i T4 z postawami CBOS wobec Ukraińców i poparciem dla pomocy Ukrainie. Testować wyprzedzenie/opóźnienie (korelacja krzyżowa, przyczynowość Grangera).
+- **Porównanie kanałów:** TVN24 vs Republika/wPolsce24. TVP przed i po grudniu 2023 jako eksperyment naturalny.
+- **Czynniki tematyczne:** BERTopic lub tagi tematyczne w obrębie negatywności T3.
+- **Opcjonalnie:** wzorce między celami, np. antyukraińskie i prorosyjskie treści w tym samym komentarzu jako sygnał możliwych trolli lub kont dezinformacyjnych.
 
-## 8. Limitations and threats to validity
+## 8. Ograniczenia i zagrożenia dla trafności
 
-- Commenters are a self-selected group, not representative of Polish society. Frame findings as online discourse.
-- Bots, trolls and coordinated campaigns.
-- Moderation and deletion by channels; survivorship bias.
-- Video selection bias (keywords and popularity).
-- Sarcasm and irony; implicit targets.
-- T1 changes meaning when governments change.
-- Channel availability across the full period.
+- Komentujący są grupą samodzielnie dobierającą się, niereprezentatywną dla społeczeństwa polskiego. Wyniki należy przedstawiać jako dyskurs online.
+- Boty, trolle i skoordynowane kampanie.
+- Moderacja i usuwanie przez kanały; efekt przeżywalności.
+- Stronniczy dobór filmów (słowa kluczowe i popularność).
+- Sarkazm i ironia; ukryte cele.
+- T1 zmienia znaczenie, gdy zmieniają się rządy.
+- Dostępność kanałów na całej badanej osi czasu.
 
-## 9. Ethics and legal
+## 9. Etyka i kwestie prawne
 
-- Comments contain personal data under GDPR. Pseudonymise, minimise stored data, and don't publish raw identifiable data.
-- Check YouTube API Terms of Service (data storage and refresh rules).
-- Ask the faculty whether ethics committee approval is needed.
-- Share only aggregated results or comment IDs, not full texts with authors.
+- Komentarze zawierają dane osobowe w rozumieniu RODO. Należy je pseudonimizować, minimalizować zakres przechowywanych danych i nie publikować surowych, możliwych do zidentyfikowania danych.
+- Sprawdzić warunki korzystania z YouTube API (zasady dotyczące przechowywania danych i ich odświeżania).
+- Zapytać wydział, czy potrzebna jest zgoda komisji etycznej.
+- Udostępniać wyłącznie wyniki zagregowane lub identyfikatory komentarzy, a nie pełne treści z autorami.
 
-## 10. Pipeline overview
+## 10. Przegląd pipeline’u
 
 ```
-YouTube Data API ─► raw comments (per channel/video)
-        │
-        ▼
-cleaning + dedup + language filter + pseudonymisation
-        │
-        ▼
-topic filter (keywords + BERTopic) ─► Ukraine/Russia-related comments
-        │
-        ├─► pilot annotation ─► guidelines ─► gold set (+ 2nd annotator, kappa)
-        │
-        ▼
-models: baseline │ fine-tuned HerBERT (target + stance + emotion) │ LLM zero/few-shot
-        │
-        ▼
-evaluation on gold set ─► best model labels the full corpus
-        │
-        ▼
-time series per target × channel ─► change points ─► events ─► CBOS correlation
-        │
-        ▼
-results, discussion, limitations
+YouTube Data API ─► surowe komentarze (per kanał/wideo)
+│
+▼
+czyszczenie + usuwanie duplikatów + filtr językowy + pseudonimizacja
+│
+▼
+filtr tematyczny (słowa kluczowe + BERTopic) ─► komentarze związane z Ukrainą/Rosją
+│
+├─► pilotażowa anotacja ─► wytyczne ─► zbiór złoty (+ 2. anotator, kappa)
+│
+▼
+modele: baseline │ dostrojony HerBERT (target + stanowisko + emocja) │ LLM zero/few-shot
+│
+▼
+ewaluacja na zbiorze złotym ─► najlepszy model oznacza cały korpus
+│
+▼
+szeregi czasowe per target × kanał ─► punkty zmian ─► wydarzenia ─► korelacja z CBOS
+│
+▼
+wyniki, dyskusja, ograniczenia
 ```
 
-## 11. Proposed thesis structure
+## 11. Proponowana struktura pracy
 
-1. Introduction: motivation, research questions, contributions
-2. Background: Polish–Ukrainian relations 2022–2026; sentiment/stance/emotion analysis; Polish NLP resources
-3. Related work: social media opinion analysis on the war in Ukraine, target-based sentiment
-4. Data: collection, corpus statistics, ethics
-5. Annotation: scheme, guidelines, agreement
-6. Methods: models, training, evaluation
-7. Results I: model evaluation
-8. Results II: analysis of the time series, channels, events and polls
-9. Discussion and limitations
-10. Conclusions and future work
+1. Wprowadzenie: motywacja, pytania badawcze, wkład
+2. Tło: relacje polsko-ukraińskie 2022–2026; analiza sentymentu/stanowiska/emocji; polskie zasoby NLP
+3. Prace powiązane: analiza opinii w mediach społecznościowych na temat wojny w Ukrainie, sentyment ukierunkowany na obiekt
+4. Dane: pozyskiwanie, statystyki korpusu, kwestie etyczne
+5. Adnotacja: schemat, wytyczne, zgodność
+6. Metody: modele, trenowanie, ewaluacja
+7. Wyniki I: ewaluacja modelu
+8. Wyniki II: analiza szeregów czasowych, kanałów, wydarzeń i sondaży
+9. Dyskusja i ograniczenia
+10. Wnioski i przyszła praca
 
-## 12. Rough timeline
+## 12. Przybliżony harmonogram
 
-| Phase | Tasks |
-|-------|-------|
-| 1 | Literature review, final research questions, channel and keyword list |
-| 2 | Data collection with the API, cleaning, topic filtering |
-| 3 | Pilot annotation, guidelines, gold set |
-| 4 | Model training and evaluation |
-| 5 | Analysis: time series, events, polls, channels |
-| 6 | Writing and revisions |
+| Faza | Zadania |
+|-------|--------|
+| 1 | Przegląd literatury, ostateczne pytania badawcze, lista kanałów i słów kluczowych |
+| 2 | Zbieranie danych przez API, czyszczenie, filtrowanie tematów |
+| 3 | Pilotażowa anotacja, wytyczne, zbiór wzorcowy (gold set) |
+| 4 | Trenowanie i ewaluacja modelu |
+| 5 | Analiza: szeregi czasowe, wydarzenia, sondaże, kanały |
+| 6 | Pisanie i poprawki |
 
-## 13. Current state of the code (this folder)
+## 13. Aktualny stan kodu (ten folder)
 
-- `youtube_top_videos_by_month.py`: top videos per month via the API. Switch selection from "most viewed" to "keyword match", or report the bias.
-- `youtube_channel_top_comments_scraper.py`, `yt_scrapper.py`: use `youtube-comment-downloader`, which only gives relative timestamps. Replace with `commentThreads.list` from the API.
-- `polish_sentiment.py`: HerBERT sentiment baseline. Useful as Baseline 1.
-- `sentiment_translation.py`: translation + VADER. A possible extra baseline for showing why native Polish models are needed.
+- `youtube_top_videos_by_month.py`: najlepsze filmy w miesiącu przez API. Przełącz wybór z „najczęściej oglądane” na „dopasowanie słów kluczowych” albo zgłoś stronniczość.
+- `youtube_channel_top_comments_scraper.py`, `yt_scrapper.py`: używają `youtube-comment-downloader`, który daje tylko względne znaczniki czasu. Zastąpić `commentThreads.list` z API.
+- `polish_sentiment.py`: bazowa analiza sentymentu HerBERT. Przydatne jako Baseline 1.
+- `sentiment_translation.py`: tłumaczenie + VADER. Możliwa dodatkowa baza porównawcza, żeby pokazać, dlaczego potrzebne są natywne polskie modele.
 
-## 14. Next steps
+## 14. Kolejne kroki
 
-- [ ] Finalise the channel list and keyword list
-- [ ] Rewrite the comment collector to use the YouTube Data API with exact timestamps
-- [ ] Collect a pilot corpus (e.g. 2 channels × 3 months)
-- [ ] Label the 500-comment pilot and refine the target boundaries
-- [ ] Get CBOS reports on attitudes toward Ukrainians, 2022–2026
-- [ ] Discuss the scope with your supervisor
+- [ ] Sfinalizować listę kanałów i listę słów kluczowych
+- [ ] Przepisać kolektor komentarzy, aby używał YouTube Data API z dokładnymi znacznikami czasu
+- [ ] Zebrać korpus pilotażowy (np. 2 kanały × 3 miesiące)
+- [ ] Oznakować pilotażowe 500 komentarzy i doprecyzować granice celu
+- [ ] Uzyskać raporty CBOS dotyczące postaw wobec Ukraińców, 2022–2026
+- [ ] Omówić zakres z promotorem
